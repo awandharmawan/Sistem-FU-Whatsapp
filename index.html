@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Follow Up Pelanggan WhatsApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Library untuk membaca Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        whatsapp: {
+                            DEFAULT: '#25D366',
+                            dark: '#128C7E',
+                            darker: '#075E54',
+                            light: '#DCF8C6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Custom scrollbar untuk tabel */
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col">
+
+    <header class="bg-whatsapp-dark text-white shadow-md py-4 px-6 sticky top-0 z-10">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <i class="fab fa-whatsapp text-2xl"></i> WA Follow Up Pro
+            </h1>
+            <div class="text-sm opacity-80">Kelola Prospek Anda</div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <div class="lg:col-span-4 bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-2">
+            <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-4 border-b pb-2">
+                <i class="fas fa-chart-pie text-blue-600"></i> Executive Dashboard
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                
+                <!-- Card 1: Total Pelanggan -->
+                <div class="bg-blue-50 rounded-lg p-4 border border-blue-100 flex items-center">
+                    <div class="bg-blue-500 text-white p-3 rounded-full h-12 w-12 flex items-center justify-center text-xl shadow-sm">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-blue-600 font-medium">Total Pelanggan</p>
+                        <h3 class="text-2xl font-bold text-blue-900" id="dashTotalPelanggan">0</h3>
+                    </div>
+                </div>
+
+                <!-- Card 2: Produktivitas FU -->
+                <div class="bg-green-50 rounded-lg p-4 border border-green-100 flex items-center">
+                    <div class="bg-green-500 text-white p-3 rounded-full h-12 w-12 flex items-center justify-center text-xl shadow-sm">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-green-600 font-medium">Produktivitas FU</p>
+                        <h3 class="text-2xl font-bold text-green-900" id="dashProgress">0</h3>
+                    </div>
+                </div>
+
+                <!-- Card 3: Total Value Transaksi -->
+                <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-100 flex items-center overflow-hidden">
+                    <div class="bg-yellow-500 text-white p-3 rounded-full h-12 w-12 flex flex-shrink-0 items-center justify-center text-xl shadow-sm">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="ml-4 truncate">
+                        <p class="text-sm text-yellow-700 font-medium truncate">Total Transaksi</p>
+                        <h3 class="text-lg md:text-xl font-bold text-yellow-900 truncate" id="dashValue">Rp 0</h3>
+                    </div>
+                </div>
+
+                <!-- Card 4: Kinerja User / Staff -->
+                <div class="bg-purple-50 rounded-lg p-3 border border-purple-100 flex flex-col justify-center h-full">
+                    <div class="flex items-center gap-2 mb-2 pb-1 border-b border-purple-100/50">
+                        <i class="fas fa-user-tie text-purple-500"></i>
+                        <p class="text-sm text-purple-700 font-medium truncate">Kinerja User (Staff)</p>
+                    </div>
+                    <div id="dashStaffList" class="overflow-y-auto pr-1 max-h-[55px] space-y-1">
+                        <div class="text-xs text-gray-400 italic">Belum ada data</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="lg:col-span-1 flex flex-col gap-6">
+            
+            <!-- Panel Kelola Template -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2">
+                        <i class="fas fa-comment-alt text-blue-500"></i> Kelola Template
+                    </h2>
+                    <button id="btnNewTemplate" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                        + Baru
+                    </button>
+                </div>
+                
+                <div id="templateFormContainer" class="hidden mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <input type="hidden" id="editTemplateId">
+                    <div class="mb-2">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Nama Template</label>
+                        <input type="text" id="templateName" placeholder="Cth: Follow Up Obat Rutin" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div class="mb-2">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Isi Pesan (Gunakan {nama} utk nama, {produk} utk nama obat)</label>
+                        <textarea id="templateContent" rows="3" placeholder="Halo {nama}, apakah {produk} sudah habis? Mau pesan lagi?" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"></textarea>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="btnSaveTemplate" class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1.5 rounded transition-colors w-full">Simpan</button>
+                        <button id="btnCancelTemplate" class="bg-gray-300 hover:bg-gray-400 text-gray-800 text-xs px-3 py-1.5 rounded transition-colors">Batal</button>
+                    </div>
+                </div>
+
+                <div id="templateList" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    <!-- Daftar template akan dimuat di sini -->
+                    <p class="text-sm text-gray-500 text-center py-2">Belum ada template. Buat baru untuk memulai.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-3">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 h-full flex flex-col">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4 border-b pb-4">
+                    <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-users text-gray-600"></i> Daftar Follow Up
+                    </h2>
+                    
+                    <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                        <button onclick="document.getElementById('excelInput').click()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 shadow-sm" title="Sesuai Format: NAMA PELANGGAN, NOMOR HP, NAMA OBAT, dll">
+                            <i class="fas fa-file-excel"></i> Import Excel
+                        </button>
+                        <!-- Input file hidden -->
+                        <input type="file" id="excelInput" class="hidden" accept=".xlsx, .xls, .csv">
+                        
+                        <div class="relative flex-grow sm:flex-grow-0 sm:w-64">
+                            <input type="text" id="searchInput" placeholder="Cari nama atau nomor..." class="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-whatsapp focus:border-whatsapp transition-colors">
+                            <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifikasi Status -->
+                <div id="statusMessage" class="hidden mb-4 p-3 rounded-lg text-sm flex items-center gap-2"></div>
+
+                <!-- Panel Aksi Masal (Muncul jika ada yang dicentang) -->
+                <div id="bulkActions" class="hidden mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg flex flex-wrap items-center justify-between gap-3 transition-all">
+                    <span class="text-sm text-blue-800 font-medium"><span id="selectedCount">0</span> pelanggan dipilih</span>
+                    <div class="flex flex-wrap gap-2">
+                        <select id="bulkTemplateSelect" class="text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:border-blue-500 bg-white">
+                            <option value="">-- Set Template Sekaligus --</option>
+                        </select>
+                        <button onclick="deleteSelected()" class="px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 text-sm font-medium rounded transition-colors border border-red-200 flex items-center gap-1">
+                            <i class="fas fa-trash"></i> Hapus Terpilih
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabel Data -->
+                <div class="overflow-x-auto table-container flex-grow border border-gray-200 rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky top-0 z-0">
+                            <tr>
+                                <th scope="col" class="px-4 py-3 text-left w-12">
+                                    <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-whatsapp focus:ring-whatsapp cursor-pointer w-4 h-4 mt-1">
+                                </th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Pelanggan</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Riwayat & Catatan</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6 text-center">Status</th>
+                                <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Data pelanggan akan di-render di sini -->
+                            <tr>
+                                <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+                                    <i class="fas fa-inbox text-4xl mb-3 text-gray-300 block"></i>
+                                    <p>Belum ada pelanggan.</p>
+                                    <p class="text-sm mt-1">Silakan <b>Import Excel</b> untuk memulai Follow Up.</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50 px-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 transform transition-all">
+            <div class="text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                </div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Hapus Data</h3>
+                <div class="mt-2">
+                    <p class="text-sm text-gray-500" id="deleteConfirmText">Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.</p>
+                </div>
+            </div>
+            <div class="mt-5 sm:mt-6 flex gap-3 justify-center">
+                <button type="button" id="btnCancelDelete" class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:text-sm transition-colors">Batal</button>
+                <button type="button" id="btnConfirmDelete" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:text-sm transition-colors">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // === FIREBASE CLOUD DATABASE INIT ===
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        let currentUser = null;
+
+        // === STATE MANAGEMENT ===
+        let customers = [];
+        let templates = [];
+        
+        let itemToDeleteId = null;
+        let itemToDeleteType = null;
+        let selectedCustomers = new Set();
+
+        // === DOM ELEMENTS ===
+        const customerTableBody = document.getElementById('customerTableBody');
+        const searchInput = document.getElementById('searchInput');
+        const statusMessage = document.getElementById('statusMessage');
+        
+        const templateFormContainer = document.getElementById('templateFormContainer');
+        const btnNewTemplate = document.getElementById('btnNewTemplate');
+        const btnSaveTemplate = document.getElementById('btnSaveTemplate');
+        const btnCancelTemplate = document.getElementById('btnCancelTemplate');
+        const templateList = document.getElementById('templateList');
+        const templateNameInput = document.getElementById('templateName');
+        const templateContentInput = document.getElementById('templateContent');
+        const editTemplateId = document.getElementById('editTemplateId');
+
+        const deleteModal = document.getElementById('deleteModal');
+        const btnCancelDelete = document.getElementById('btnCancelDelete');
+        const btnConfirmDelete = document.getElementById('btnConfirmDelete');
+        const deleteConfirmText = document.getElementById('deleteConfirmText');
+
+        // === AUTH & REALTIME SYNC ===
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Auth error:", error);
+                showNotification("Gagal terhubung ke database cloud", "error");
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                setupRealtimeListeners();
+            }
+        });
+
+        function setupRealtimeListeners() {
+            // Listen ke koleksi Templates secara real-time
+            const templatesRef = collection(db, 'artifacts', appId, 'public', 'data', 'templates');
+            onSnapshot(templatesRef, (snapshot) => {
+                templates = [];
+                let isFirstLoad = snapshot.size === 0;
+                
+                snapshot.forEach(doc => {
+                    templates.push({ id: doc.id, ...doc.data() });
+                });
+
+                if (isFirstLoad) {
+                    seedDefaultTemplates();
+                } else {
+                    renderTemplates();
+                    updateTemplateDropdown();
+                    if(customers.length > 0) renderCustomers(searchInput.value);
+                }
+            }, (error) => console.error("Template Sync Error:", error));
+
+            // Listen ke koleksi Customers secara real-time
+            const customersRef = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
+            onSnapshot(customersRef, (snapshot) => {
+                customers = [];
+                snapshot.forEach(doc => {
+                    customers.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // Sortir dari yang terbaru masuk
+                customers.sort((a, b) => b.createdAt - a.createdAt);
+                
+                renderCustomers(searchInput.value);
+                updateDashboard();
+            }, (error) => {
+                console.error("Customer Sync Error:", error);
+                showNotification("Terputus dari database", "error");
+            });
+        }
+
+        function seedDefaultTemplates() {
+            const defaults = [
+                { id: Date.now().toString() + '1', name: 'Sapaan Awal', content: 'Halo {nama}, perkenalkan saya dari [Nama Toko]. Apakah Anda ada waktu sebentar?' },
+                { id: Date.now().toString() + '2', name: 'Follow Up Repeat Order', content: 'Halo {nama}, semoga harinya menyenangkan! Kami lihat sebelumnya Kakak pernah membeli {produk}. Apakah produknya sudah habis? Saat ini kami sedang ada promo khusus pelanggan lama jika ingin memesan ulang.' },
+                { id: Date.now().toString() + '3', name: 'Promo Khusus', content: 'Kabar gembira untuk {nama}! Kami punya penawaran spesial khusus untuk Anda hari ini.' }
+            ];
+            defaults.forEach(t => {
+                setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'templates', t.id), { name: t.name, content: t.content });
+            });
+        }
+
+        // Jalankan Autentikasi dan Event Listener
+        initAuth();
+        setupEventListeners();
+
+        // === UTILITY FUNCTIONS ===
+        function showNotification(message, type = 'success') {
+            statusMessage.innerHTML = type === 'success' 
+                ? `<i class="fas fa-check-circle text-whatsapp"></i> ${message}`
+                : `<i class="fas fa-info-circle text-blue-500"></i> ${message}`;
+            
+            statusMessage.className = `mb-4 p-3 rounded-lg text-sm flex items-center gap-2 ${
+                type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
+            }`;
+            statusMessage.classList.remove('hidden');
+            
+            setTimeout(() => {
+                statusMessage.classList.add('hidden');
+            }, 3000);
+        }
+
+        function formatPhone(phone) {
+            let cleaned = ('' + phone).replace(/\D/g, '');
+            if (cleaned.startsWith('0')) {
+                cleaned = cleaned.substring(1);
+            }
+            return cleaned;
+        }
+
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        // === DASHBOARD FUNCTIONS ===
+        function updateDashboard() {
+            const totalPelanggan = customers.length;
+            const contactedCount = customers.filter(c => c.status === 'contacted').length;
+            const progressPct = totalPelanggan > 0 ? Math.round((contactedCount / totalPelanggan) * 100) : 0;
+            
+            const totalValue = customers.reduce((sum, c) => sum + (c.transactionValue || 0), 0);
+            
+            const staffStats = {};
+            customers.forEach(c => {
+                const staff = c.staffName || 'Tanpa User';
+                if(!staffStats[staff]) staffStats[staff] = { total: 0, contacted: 0, value: 0 };
+                staffStats[staff].total += 1;
+                if(c.status === 'contacted') staffStats[staff].contacted += 1;
+                staffStats[staff].value += (c.transactionValue || 0);
+            });
+
+            let staffListHTML = '';
+            const sortedStaff = Object.entries(staffStats).sort((a, b) => b[1].contacted - a[1].contacted);
+            
+            const currencyCompact = new Intl.NumberFormat('id-ID', { notation: "compact", compactDisplay: "short", style: "currency", currency: "IDR" });
+
+            if(sortedStaff.length > 0) {
+                staffListHTML = sortedStaff.map(([name, stat]) => `
+                    <div class="flex justify-between items-center text-xs mb-1">
+                        <span class="font-medium text-gray-700 truncate w-24" title="${name}">${name}</span>
+                        <span class="text-green-600 font-bold px-1">${stat.contacted}/${stat.total} FU</span>
+                        <span class="text-blue-600 font-medium">${currencyCompact.format(stat.value)}</span>
+                    </div>
+                `).join('');
+            }
+
+            const elTotal = document.getElementById('dashTotalPelanggan');
+            const elProgress = document.getElementById('dashProgress');
+            const elValue = document.getElementById('dashValue');
+            const elStaffList = document.getElementById('dashStaffList');
+
+            if(elTotal) elTotal.innerText = totalPelanggan;
+            if(elProgress) elProgress.innerHTML = `${contactedCount} <span class="text-sm text-gray-500 font-normal">/ ${totalPelanggan} (${progressPct}%)</span>`;
+            if(elValue) elValue.innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(totalValue);
+            if(elStaffList) elStaffList.innerHTML = staffListHTML || '<div class="text-xs text-gray-400 italic">Belum ada data</div>';
+        }
+
+        // === TEMPLATE MANAGEMENT ===
+        function renderTemplates() {
+            if (templates.length === 0) {
+                templateList.innerHTML = '<p class="text-sm text-gray-500 text-center py-2">Belum ada template. Buat baru untuk memulai.</p>';
+                return;
+            }
+
+            templateList.innerHTML = templates.map(t => `
+                <div class="bg-white border border-gray-200 rounded p-2 mb-2 flex justify-between items-start group">
+                    <div class="pr-2 w-full">
+                        <div class="font-medium text-sm text-gray-800">${t.name}</div>
+                        <div class="text-xs text-gray-500 truncate mt-0.5" title="${t.content}">${t.content}</div>
+                    </div>
+                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="editTemplate('${t.id}')" class="text-blue-500 hover:text-blue-700 p-1" title="Edit">
+                            <i class="fas fa-edit text-xs"></i>
+                        </button>
+                        <button onclick="confirmDelete('${t.id}', 'template')" class="text-red-500 hover:text-red-700 p-1" title="Hapus">
+                            <i class="fas fa-trash text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateTemplateDropdown() {
+            const bulkSelect = document.getElementById('bulkTemplateSelect');
+            if (bulkSelect) {
+                const currentValue = bulkSelect.value;
+                bulkSelect.innerHTML = '<option value="">-- Set Template Sekaligus --</option>' + 
+                    templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+                if (templates.find(t => t.id === currentValue)) bulkSelect.value = currentValue;
+            }
+        }
+
+        function saveTemplate() {
+            if (!currentUser) return;
+            const name = templateNameInput.value.trim();
+            const content = templateContentInput.value.trim();
+            const editId = editTemplateId.value;
+
+            if (!name || !content) {
+                alert("Nama dan isi template harus diisi!");
+                return;
+            }
+
+            const idToSave = editId || Date.now().toString();
+            // Simpan ke Cloud DB
+            setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'templates', idToSave), {
+                name, content
+            });
+
+            resetTemplateForm();
+            showNotification(editId ? "Template diperbarui" : "Template ditambahkan");
+        }
+
+        function editTemplate(id) {
+            const template = templates.find(t => t.id === id);
+            if (template) {
+                editTemplateId.value = template.id;
+                templateNameInput.value = template.name;
+                templateContentInput.value = template.content;
+                templateFormContainer.classList.remove('hidden');
+                btnNewTemplate.classList.add('hidden');
+                templateNameInput.focus();
+            }
+        }
+        window.editTemplate = editTemplate; 
+
+        function resetTemplateForm() {
+            editTemplateId.value = '';
+            templateNameInput.value = '';
+            templateContentInput.value = '';
+            templateFormContainer.classList.add('hidden');
+            btnNewTemplate.classList.remove('hidden');
+        }
+
+        // === CUSTOMER MANAGEMENT ===
+        function renderCustomers(searchTerm = '') {
+            let filteredCustomers = customers;
+            
+            if (searchTerm) {
+                const term = searchTerm.toLowerCase();
+                filteredCustomers = customers.filter(c => 
+                    c.name.toLowerCase().includes(term) || 
+                    c.phone.includes(term)
+                );
+            }
+
+            if (filteredCustomers.length === 0) {
+                customerTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+                            <i class="fas ${searchTerm ? 'fa-search' : 'fa-inbox'} text-4xl mb-3 text-gray-300 block"></i>
+                            <p>${searchTerm ? 'Data tidak ditemukan.' : 'Belum ada pelanggan.'}</p>
+                            ${!searchTerm ? '<p class="text-sm mt-1">Silakan <b>Import Excel</b> untuk memulai Follow Up.</p>' : ''}
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            customerTableBody.innerHTML = filteredCustomers.map(c => {
+                const statusClass = c.status === 'contacted' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+                const statusText = c.status === 'contacted' ? 'Dihubungi' : 'Menunggu';
+                const statusIcon = c.status === 'contacted' ? 'fa-check-double' : 'fa-clock';
+                const isSelected = selectedCustomers.has(c.id);
+                
+                let templateName = '-';
+                if (c.templateId) {
+                    const t = templates.find(temp => temp.id === c.templateId);
+                    if (t) templateName = t.name;
+                }
+
+                return `
+                <tr class="hover:bg-gray-50 transition-colors ${isSelected ? 'bg-blue-50/50' : ''}">
+                    <td class="px-4 py-3">
+                        <input type="checkbox" onclick="toggleSelect('${c.id}')" ${isSelected ? 'checked' : ''} class="rounded border-gray-300 text-whatsapp focus:ring-whatsapp cursor-pointer w-4 h-4 mt-1">
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-whatsapp-light to-whatsapp rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                ${c.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div class="ml-3">
+                                <div class="text-sm font-medium text-gray-900">${c.name}</div>
+                                <div class="text-xs text-gray-500 flex items-center gap-1">
+                                    <i class="fas fa-phone-alt text-[10px]"></i> +62${c.phone}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="text-sm font-medium text-blue-700 line-clamp-1" title="${c.product || ''}"><i class="fas fa-box text-xs mr-1 opacity-70"></i>${c.product || 'Belum ada produk'}</div>
+                        <div class="text-sm text-gray-900 line-clamp-1 mt-1" title="${c.notes}">${c.notes || '-'}</div>
+                        <div class="text-xs text-gray-500 mt-1">User: <span class="font-medium text-gray-700">${c.staffName || '-'}</span> | Tpl: ${templateName}</div>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-center">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass} flex items-center justify-center gap-1 w-max mx-auto">
+                            <i class="fas ${statusIcon} text-[10px]"></i> ${statusText}
+                        </span>
+                        ${c.lastContacted ? `<div class="text-[10px] text-gray-400 mt-1" title="${formatDate(c.lastContacted)}">${new Date(c.lastContacted).toLocaleDateString()}</div>` : ''}
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                        <div class="flex items-center justify-end gap-2">
+                            <button onclick="sendWA('${c.id}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-whatsapp hover:bg-whatsapp-dark text-white rounded-md transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-whatsapp">
+                                <i class="fab fa-whatsapp"></i> Chat WA
+                            </button>
+                            <div class="relative group">
+                                <button class="p-1.5 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <div class="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-100 hidden group-hover:block group-focus-within:block z-10">
+                                    <div class="py-1">
+                                        <button onclick="toggleStatus('${c.id}')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            <i class="fas fa-sync-alt w-4 mr-1 text-blue-500"></i> Ubah Status
+                                        </button>
+                                        <button onclick="confirmDelete('${c.id}', 'customer')" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                            <i class="fas fa-trash-alt w-4 mr-1"></i> Hapus
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        function sendWA(id) {
+            if (!currentUser) return;
+            const customer = customers.find(c => c.id === id);
+            if (!customer) return;
+
+            let message = '';
+            if (customer.templateId) {
+                const template = templates.find(t => t.id === customer.templateId);
+                if (template) {
+                    message = template.content.replace(/{nama}/gi, customer.name);
+                    message = message.replace(/{produk}/gi, customer.product || 'produk kami');
+                }
+            }
+
+            const encodedMessage = encodeURIComponent(message);
+            const targetPhone = `62${customer.phone}`;
+            const waUrl = `https://wa.me/${targetPhone}${encodedMessage ? `?text=${encodedMessage}` : ''}`;
+            
+            window.open(waUrl, '_blank');
+
+            // Simpan status baru ke Cloud
+            setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), {
+                status: 'contacted',
+                lastContacted: new Date().getTime()
+            }, { merge: true });
+            
+            showNotification(`Membuka WhatsApp untuk ${customer.name}`, 'info');
+        }
+        window.sendWA = sendWA;
+
+        function toggleStatus(id) {
+            if (!currentUser) return;
+            const customer = customers.find(c => c.id === id);
+            if (customer) {
+                const newStatus = customer.status === 'pending' ? 'contacted' : 'pending';
+                setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), {
+                    status: newStatus
+                }, { merge: true });
+            }
+        }
+        window.toggleStatus = toggleStatus;
+
+        function confirmDelete(id, type) {
+            itemToDeleteId = id;
+            itemToDeleteType = type;
+            
+            if (type === 'customer') {
+                const c = customers.find(x => x.id === id);
+                deleteConfirmText.innerHTML = `Hapus data pelanggan <b>${c.name}</b>?<br>Tindakan ini tidak dapat dibatalkan.`;
+            } else {
+                const t = templates.find(x => x.id === id);
+                deleteConfirmText.innerHTML = `Hapus template <b>${t.name}</b>?<br>Tindakan ini tidak dapat dibatalkan.`;
+            }
+            
+            deleteModal.classList.remove('hidden');
+        }
+        window.confirmDelete = confirmDelete;
+
+        function executeDelete() {
+            if (!itemToDeleteId || !currentUser) return;
+
+            if (itemToDeleteType === 'customer') {
+                deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', itemToDeleteId));
+                showNotification('Data pelanggan dihapus.');
+                selectedCustomers.delete(itemToDeleteId);
+                updateBulkActions();
+            } else if (itemToDeleteType === 'template') {
+                deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'templates', itemToDeleteId));
+                customers.forEach(c => {
+                    if (c.templateId === itemToDeleteId) {
+                        setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', c.id), { templateId: null }, { merge: true });
+                    }
+                });
+                showNotification('Template dihapus.');
+            }
+
+            closeDeleteModal();
+        }
+
+        function closeDeleteModal() {
+            deleteModal.classList.add('hidden');
+            itemToDeleteId = null;
+            itemToDeleteType = null;
+        }
+
+        function setupEventListeners() {
+            searchInput.addEventListener('input', (e) => {
+                renderCustomers(e.target.value);
+            });
+
+            btnNewTemplate.addEventListener('click', () => {
+                resetTemplateForm();
+                templateFormContainer.classList.remove('hidden');
+                btnNewTemplate.classList.add('hidden');
+                templateNameInput.focus();
+            });
+
+            btnCancelTemplate.addEventListener('click', resetTemplateForm);
+            btnSaveTemplate.addEventListener('click', saveTemplate);
+
+            btnCancelDelete.addEventListener('click', closeDeleteModal);
+            btnConfirmDelete.addEventListener('click', executeDelete);
+            
+            deleteModal.addEventListener('click', (e) => {
+                if (e.target === deleteModal) closeDeleteModal();
+            });
+
+            document.getElementById('excelInput')?.addEventListener('change', handleExcelImport);
+            
+            document.getElementById('bulkTemplateSelect')?.addEventListener('change', (e) => {
+                const templateId = e.target.value;
+                if(!templateId || !currentUser) return;
+                
+                selectedCustomers.forEach(id => {
+                    setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id), {
+                        templateId: templateId
+                    }, { merge: true });
+                });
+                
+                showNotification(`Template diterapkan ke ${selectedCustomers.size} pelanggan terpilih`);
+                e.target.value = ''; // Reset
+            });
+
+            document.getElementById('selectAll')?.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    const searchTerm = searchInput.value.toLowerCase();
+                    const filtered = customers.filter(c => 
+                        c.name.toLowerCase().includes(searchTerm) || 
+                        c.phone.includes(searchTerm)
+                    );
+                    filtered.forEach(c => selectedCustomers.add(c.id));
+                } else {
+                    selectedCustomers.clear();
+                }
+                updateBulkActions();
+                renderCustomers(searchInput.value);
+            });
+        }
+
+        // === BULK SELECTION & EXCEL FUNCTIONS ===
+        function toggleSelect(id) {
+            if (selectedCustomers.has(id)) {
+                selectedCustomers.delete(id);
+            } else {
+                selectedCustomers.add(id);
+            }
+            updateBulkActions();
+            renderCustomers(searchInput.value);
+        }
+        window.toggleSelect = toggleSelect;
+
+        function updateBulkActions() {
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+            const selectAllCheckbox = document.getElementById('selectAll');
+            
+            if (selectedCustomers.size > 0) {
+                bulkActions.classList.remove('hidden');
+                selectedCount.textContent = selectedCustomers.size;
+            } else {
+                bulkActions.classList.add('hidden');
+                if(selectAllCheckbox) selectAllCheckbox.checked = false;
+            }
+        }
+
+        function deleteSelected() {
+            if (!currentUser) return;
+            if(confirm(`Yakin ingin menghapus ${selectedCustomers.size} pelanggan yang dipilih?`)) {
+                selectedCustomers.forEach(id => {
+                    deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', id));
+                });
+                selectedCustomers.clear();
+                updateBulkActions();
+                showNotification('Pelanggan terpilih berhasil dihapus');
+            }
+        }
+        window.deleteSelected = deleteSelected;
+
+        function handleExcelImport(e) {
+            if (!currentUser) {
+                showNotification("Tunggu hingga terhubung ke server", "error");
+                return;
+            }
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    showNotification("Sedang menyimpan ke Database Cloud...", "info");
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    if (jsonData.length === 0) {
+                        showNotification('File Excel kosong atau format tidak sesuai', 'error');
+                        return;
+                    }
+
+                    let importedCount = 0;
+                    jsonData.forEach((row, index) => {
+                        const name = row['NAMA PELANGGAN'] || row['Nama'] || row['Nama Pelanggan'] || row['Name'] || Object.values(row)[0]; 
+                        let phone = row['NOMOR HP'] || row['No WA'] || row['Nomor WA'] || row['Phone'] || row['WhatsApp'] || row['No HP'] || row['Telp'];
+                        const product = row['NAMA OBAT'] || row['Produk'] || row['Product'] || row['Barang'] || row['Pesanan'] || '';
+                        
+                        const staffName = row['NAMA USER'] || row['User'] || row['Staff'] || 'Tanpa User';
+                        const rawTotal = row['TOTAL TRANSAKSI'] || row['Total'] || row['Nominal'] || 0;
+                        const transactionValue = parseFloat(String(rawTotal).replace(/[^\d]/g, '')) || 0;
+
+                        let extraNotes = [];
+                        if(row['TANGGAL TRANSAKSI']) extraNotes.push(`Tgl: ${row['TANGGAL TRANSAKSI']}`);
+                        if(row['QUANTITY']) extraNotes.push(`Qty: ${row['QUANTITY']}`);
+                        if(row['HARGA OBAT']) extraNotes.push(`Harga: ${row['HARGA OBAT']}`);
+                        if(row['TOTAL TRANSAKSI']) extraNotes.push(`Total: ${row['TOTAL TRANSAKSI']}`);
+                        
+                        const originalNotes = row['Catatan'] || row['Notes'] || '';
+                        const notes = originalNotes ? `${originalNotes}. ${extraNotes.join(' | ')}` : extraNotes.join(' | ');
+
+                        if (name && phone) {
+                            const cleanPhone = formatPhone(phone);
+                            // Bikin ID unik untuk database cloud
+                            const newId = Date.now().toString() + index.toString() + Math.floor(Math.random()*1000).toString();
+                            
+                            const newCustomer = {
+                                name: String(name).trim(),
+                                phone: cleanPhone,
+                                product: String(product).trim(),
+                                templateId: null,
+                                notes: String(notes).trim(),
+                                status: 'pending',
+                                createdAt: new Date().getTime(),
+                                lastContacted: null,
+                                staffName: String(staffName).trim(),
+                                transactionValue: transactionValue
+                            };
+                            
+                            // Tulis ke Firebase Cloud Storage
+                            setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', newId), newCustomer);
+                            importedCount++;
+                        }
+                    });
+
+                    showNotification(`Berhasil mengimpor ${importedCount} pelanggan ke Cloud`);
+                } catch (err) {
+                    console.error(err);
+                    showNotification('Terjadi kesalahan saat membaca file', 'error');
+                } finally {
+                    e.target.value = ''; 
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+    </script>
+    </body>
+    </html>
