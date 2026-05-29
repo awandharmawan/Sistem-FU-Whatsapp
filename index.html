@@ -3,206 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Follow Up CRM</title>
-    <!-- Tailwind CSS via CDN -->
+    <title>Sistem Follow Up Pelanggan WhatsApp</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- SheetJS (Mesin Pembaca Excel) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        whatsapp: { DEFAULT: '#25D366', dark: '#128C7E', light: '#DCF8C6' },
-                        primary: '#3B82F6',
-                        secondary: '#F3F4F6'
+                        whatsapp: {
+                            DEFAULT: '#25D366',
+                            dark: '#128C7E',
+                            light: '#DCF8C6'
+                        }
                     }
                 }
             }
         }
     </script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
 </head>
-<body class="text-gray-800 h-screen flex flex-col overflow-hidden">
+<body class="bg-gray-100 font-sans h-screen overflow-hidden flex flex-col">
 
-    <!-- === EXECUTIVE DASHBOARD === -->
-    <div class="bg-white shadow-sm border-b border-gray-200 z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                <div class="flex items-center gap-2">
-                    <div class="bg-whatsapp text-white p-2 rounded-lg"><i class="fab fa-whatsapp text-xl"></i></div>
-                    <h1 class="text-xl font-bold text-gray-800">Sistem Follow Up WA</h1>
+    <!-- Navbar -->
+    <nav class="bg-whatsapp-dark text-white shadow-md z-10 shrink-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-14">
+                <div class="flex items-center gap-3">
+                    <i class="fab fa-whatsapp text-2xl"></i>
+                    <span class="font-semibold text-lg tracking-wide">WA Follow Up Pro</span>
                 </div>
+                <div class="flex items-center gap-3">
+                    <!-- Tombol Import Excel -->
+                    <label class="cursor-pointer bg-white text-whatsapp-dark hover:bg-gray-100 font-medium py-1.5 px-4 rounded shadow-sm text-sm transition-colors flex items-center gap-2">
+                        <i class="fas fa-file-excel"></i> Import Excel
+                        <input type="file" id="excelInput" accept=".xlsx, .xls, .csv" class="hidden" />
+                    </label>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-                <div class="flex-1 w-full overflow-x-auto scrollbar-hide pb-1 md:pb-0">
-                    <div class="flex gap-4 min-w-max px-2 justify-end">
-                        <!-- Metrik 1: Total Pelanggan -->
-                        <div class="bg-blue-50 px-4 py-2 rounded-lg border border-blue-100 flex items-center gap-3">
-                            <div class="text-blue-500"><i class="fas fa-users text-2xl"></i></div>
-                            <div>
-                                <p class="text-xs text-gray-500 font-medium">Total Pelanggan</p>
-                                <p class="text-lg font-bold text-gray-800" id="dashTotalPelanggan">0</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Metrik 2: Produktivitas FU -->
-                        <div class="bg-green-50 px-4 py-2 rounded-lg border border-green-100 flex items-center gap-3">
-                            <div class="text-whatsapp-dark"><i class="fas fa-check-double text-2xl"></i></div>
-                            <div>
-                                <p class="text-xs text-gray-500 font-medium">Produktivitas FU</p>
-                                <p class="text-lg font-bold text-gray-800" id="dashProgress">0 <span class="text-sm text-gray-500 font-normal">/ 0 (0%)</span></p>
-                            </div>
-                        </div>
-
-                        <!-- Metrik 3: Total Value -->
-                        <div class="bg-yellow-50 px-4 py-2 rounded-lg border border-yellow-100 flex items-center gap-3">
-                            <div class="text-yellow-600"><i class="fas fa-coins text-2xl"></i></div>
-                            <div>
-                                <p class="text-xs text-gray-500 font-medium">Total Value Transaksi</p>
-                                <p class="text-lg font-bold text-gray-800" id="dashValue">Rp 0</p>
-                            </div>
-                        </div>
+    <!-- Executive Dashboard -->
+    <div class="bg-white border-b border-gray-200 shrink-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-blue-50 rounded-lg p-3 border border-blue-100 flex items-center gap-3">
+                    <div class="p-2 bg-blue-100 text-blue-600 rounded-full"><i class="fas fa-users text-lg"></i></div>
+                    <div>
+                        <div class="text-xs text-gray-500 font-medium">Total Pelanggan</div>
+                        <div class="text-lg font-bold text-gray-800" id="dashTotalPelanggan">0</div>
+                    </div>
+                </div>
+                <div class="bg-green-50 rounded-lg p-3 border border-green-100 flex items-center gap-3">
+                    <div class="p-2 bg-green-100 text-green-600 rounded-full"><i class="fas fa-check-double text-lg"></i></div>
+                    <div>
+                        <div class="text-xs text-gray-500 font-medium">Produktivitas FU</div>
+                        <div class="text-lg font-bold text-gray-800" id="dashProgress">0 <span class="text-sm font-normal text-gray-500">/ 0 (0%)</span></div>
+                    </div>
+                </div>
+                <div class="bg-purple-50 rounded-lg p-3 border border-purple-100 flex items-center gap-3">
+                    <div class="p-2 bg-purple-100 text-purple-600 rounded-full"><i class="fas fa-wallet text-lg"></i></div>
+                    <div>
+                        <div class="text-xs text-gray-500 font-medium">Total Value Transaksi</div>
+                        <div class="text-lg font-bold text-gray-800" id="dashValue">Rp 0</div>
+                    </div>
+                </div>
+                <div class="bg-orange-50 rounded-lg p-3 border border-orange-100 flex flex-col justify-center">
+                    <div class="text-xs text-gray-500 font-medium mb-1"><i class="fas fa-medal text-orange-500"></i> Kinerja Staff (Top FU)</div>
+                    <div id="dashStaffList" class="max-h-12 overflow-y-auto pr-1 custom-scrollbar">
+                        <div class="text-xs text-gray-400 italic">Belum ada data</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MAIN CONTENT -->
+    <!-- Main Content -->
     <div class="flex-1 flex overflow-hidden">
-        
-        <!-- SIDEBAR: KELOLA TEMPLATE & KINERJA USER -->
-        <div class="w-80 bg-white border-r border-gray-200 flex flex-col h-full hidden md:flex shrink-0">
-            <!-- Peringkat Kinerja User -->
-            <div class="p-4 border-b border-gray-100 bg-purple-50/50">
-                <h3 class="text-sm font-semibold text-purple-800 mb-2 flex items-center gap-2">
-                    <i class="fas fa-trophy text-purple-600"></i> Kinerja Staff (FU)
-                </h3>
-                <div id="dashStaffList" class="space-y-1.5 max-h-32 overflow-y-auto pr-1">
-                    <div class="text-xs text-gray-400 italic">Belum ada data</div>
-                </div>
-            </div>
-
-            <div class="p-4 border-b border-gray-200 bg-gray-50">
-                <h2 class="font-semibold text-gray-700 flex items-center gap-2"><i class="fas fa-comment-dots text-primary"></i> Kelola Template</h2>
-                <p class="text-xs text-gray-500 mt-1">Gunakan <b>{nama}</b> untuk memanggil nama dan <b>{produk}</b> untuk produk.</p>
-            </div>
+        <div class="max-w-7xl mx-auto w-full flex flex-col md:flex-row h-full">
             
-            <div class="p-4 flex-1 overflow-y-auto">
-                <button id="btnNewTemplate" class="w-full mb-4 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2">
-                    <i class="fas fa-plus"></i> Buat Template Baru
-                </button>
-
-                <div id="templateFormContainer" class="hidden mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
-                    <input type="hidden" id="editTemplateId">
-                    <input type="text" id="templateName" placeholder="Nama Template (mis: Promo Bulanan)" class="w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary mb-2 px-3 py-1.5">
-                    <textarea id="templateContent" rows="4" placeholder="Halo {nama}, produk {produk} nya mau dipesan lagi?" class="w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary px-3 py-2"></textarea>
-                    <div class="flex gap-2 mt-2">
-                        <button id="btnSaveTemplate" class="flex-1 bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700">Simpan</button>
-                        <button id="btnCancelTemplate" class="flex-1 bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded text-sm hover:bg-gray-50">Batal</button>
-                    </div>
-                </div>
-
-                <div id="templateList" class="space-y-2">
-                    <!-- Templates render here -->
-                </div>
-            </div>
-        </div>
-
-        <!-- MAIN AREA: DAFTAR PELANGGAN -->
-        <div class="flex-1 flex flex-col h-full bg-secondary relative">
-            
-            <div id="statusMessage" class="absolute top-4 right-4 z-50 hidden transition-all duration-300 shadow-lg max-w-sm"></div>
-
-            <!-- Header Tabel -->
-            <div class="bg-white px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h2 class="text-lg font-bold text-gray-800">Daftar Follow Up</h2>
-                    <p class="text-sm text-gray-500">Impor data Excel lalu eksekusi Follow Up.</p>
+            <!-- Sidebar: Kelola Template (Lebar 1/4) -->
+            <div class="w-full md:w-1/4 bg-white shadow-sm border-r border-gray-200 flex flex-col z-0">
+                <div class="p-4 border-b border-gray-100 bg-gray-50">
+                    <h2 class="text-md font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-comment-dots text-whatsapp"></i> Kelola Template
+                    </h2>
                 </div>
                 
-                <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                    <!-- Import Excel Tombol -->
-                    <div class="relative">
-                        <input type="file" id="excelInput" accept=".xlsx, .xls, .csv" class="hidden" />
-                        <label for="excelInput" class="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm w-full">
-                            <i class="fas fa-file-excel"></i> Import Excel
-                        </label>
-                    </div>
+                <div class="p-4 flex-1 overflow-y-auto">
+                    <div id="statusMessage" class="hidden mb-4 p-3 rounded text-sm"></div>
 
-                    <div class="relative w-full sm:w-64">
-                        <input type="text" id="searchInput" placeholder="Cari nama atau nomor..." class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm">
-                        <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Bulk Actions Banner -->
-            <div id="bulkActions" class="bg-blue-50 px-6 py-3 border-b border-blue-100 flex items-center justify-between hidden transition-all">
-                <div class="text-sm text-blue-800 font-medium">
-                    <span id="selectedCount">0</span> pelanggan dipilih
-                </div>
-                <div class="flex items-center gap-2">
-                    <select id="bulkTemplateSelect" class="text-sm border-gray-300 rounded-md py-1.5 pl-3 pr-8 focus:ring-primary focus:border-primary shadow-sm bg-white">
-                        <option value="">-- Set Template Sekaligus --</option>
-                    </select>
-                    <button onclick="deleteSelected()" class="text-sm bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded-md transition-colors font-medium border border-red-200">
-                        <i class="fas fa-trash-alt mr-1"></i> Hapus
+                    <!-- Template Form -->
+                    <button id="btnNewTemplate" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 py-2 rounded-md transition-colors text-sm font-medium mb-4 shadow-sm">
+                        <i class="fas fa-plus mr-1"></i> Buat Template Baru
                     </button>
+
+                    <div id="templateFormContainer" class="hidden bg-gray-50 p-3 rounded-md border border-gray-200 mb-4 shadow-inner">
+                        <input type="hidden" id="editTemplateId">
+                        <div class="mb-3">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Nama Judul (Misal: Obat Rutin)</label>
+                            <input type="text" id="templateName" class="focus:ring-whatsapp focus:border-whatsapp block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2 border">
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Isi Pesan WA</label>
+                            <textarea id="templateContent" rows="4" class="focus:ring-whatsapp focus:border-whatsapp block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="Gunakan {nama} untuk memanggil nama pelanggan, dan {produk} untuk nama obatnya."></textarea>
+                            <p class="text-[10px] text-gray-500 mt-1">Variabel tersedia: <b>{nama}</b>, <b>{produk}</b></p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="btnSaveTemplate" class="flex-1 bg-whatsapp hover:bg-whatsapp-dark text-white py-1.5 rounded text-sm transition-colors">Simpan</button>
+                            <button id="btnCancelTemplate" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-1.5 rounded text-sm transition-colors">Batal</button>
+                        </div>
+                    </div>
+
+                    <!-- Template List -->
+                    <div class="mt-2">
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Daftar Template</h3>
+                        <div id="templateList" class="space-y-2">
+                            <!-- Templates dipopulate via JS -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Table Area -->
-            <div class="flex-1 overflow-auto bg-white m-4 rounded-lg shadow-sm border border-gray-200">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50 sticky top-0 z-10 shadow-sm">
-                        <tr>
-                            <th scope="col" class="px-4 py-3 text-left w-12">
-                                <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-whatsapp focus:ring-whatsapp cursor-pointer w-4 h-4">
-                            </th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Info Pelanggan</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Riwayat & Catatan</th>
-                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Status</th>
-                            <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="customerTableBody" class="bg-white divide-y divide-gray-200">
-                        <!-- Data rows render here -->
-                        <tr>
-                            <td colspan="5" class="px-6 py-10 text-center text-gray-500">
-                                <i class="fas fa-spinner fa-spin text-2xl text-gray-400 mb-2"></i>
-                                <p>Memuat database...</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <!-- Main Area: Daftar Follow Up (Lebar 3/4) -->
+            <div class="w-full md:w-3/4 flex flex-col bg-gray-50">
+                <div class="p-4 border-b border-gray-200 bg-white">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                        <i class="fas fa-list-ul text-blue-500"></i> Daftar Pelanggan
+                    </h2>
+                    
+                    <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col gap-3">
+                        <!-- Baris Atas: Pencarian & Filter -->
+                        <div class="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center w-full">
+                            <div class="relative w-full sm:w-1/3">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </div>
+                                <input type="text" id="searchInput" class="focus:ring-whatsapp focus:border-whatsapp block w-full pl-10 sm:text-sm border-gray-300 rounded-md shadow-sm py-2 border" placeholder="Cari nama atau nomor...">
+                            </div>
+                            
+                            <!-- Filter Rentang Harga -->
+                            <div class="flex items-center gap-2 w-full sm:w-2/3 justify-end bg-gray-50 px-3 py-1.5 rounded-md border border-gray-200">
+                                <i class="fas fa-filter text-gray-400 text-sm" title="Filter Nominal Transaksi"></i>
+                                <span class="text-xs font-medium text-gray-600 mr-1 hidden sm:inline">Spend:</span>
+                                <input type="number" id="filterMin" placeholder="Min Rp" class="w-24 sm:w-32 focus:ring-whatsapp focus:border-whatsapp block shadow-sm text-sm border-gray-300 rounded-md py-1 px-2 border">
+                                <span class="text-gray-400">-</span>
+                                <input type="number" id="filterMax" placeholder="Max Rp" class="w-24 sm:w-32 focus:ring-whatsapp focus:border-whatsapp block shadow-sm text-sm border-gray-300 rounded-md py-1 px-2 border">
+                            </div>
+                        </div>
 
+                        <!-- Baris Bawah: Bulk Actions (Akan muncul jika ada checkbox yang dicentang) -->
+                        <div id="bulkActions" class="hidden flex items-center justify-between bg-blue-50 border border-blue-200 p-2 rounded-md">
+                            <div class="text-sm text-blue-800 font-medium">
+                                <span id="selectedCount">0</span> pelanggan dipilih
+                            </div>
+                            <div class="flex gap-2">
+                                <select id="bulkTemplateSelect" class="text-sm border-gray-300 rounded-md shadow-sm py-1 pl-2 pr-8 focus:ring-whatsapp focus:border-whatsapp">
+                                    <option value="">-- Set Template Sekaligus --</option>
+                                    <!-- Options dipopulate JS -->
+                                </select>
+                                <button onclick="deleteSelected()" class="bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1 rounded text-sm transition-colors border border-red-200">
+                                    <i class="fas fa-trash-alt"></i> Hapus
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Area -->
+                <div class="flex-1 overflow-auto bg-white relative">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky top-0 z-10 shadow-sm">
+                            <tr>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                                    <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-whatsapp focus:ring-whatsapp cursor-pointer w-4 h-4">
+                                </th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pelanggan</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Info & Riwayat</th>
+                                <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status FU</th>
+                                <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Data dipopulate via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Modal Konfirmasi Hapus -->
-    <div id="deleteModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity">
-        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm transform transition-all">
-            <div class="text-center">
-                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                    <i class="fas fa-exclamation-triangle text-xl text-red-600"></i>
-                </div>
-                <h3 class="text-lg leading-6 font-medium text-gray-900">Konfirmasi Hapus</h3>
-                <div class="mt-2">
-                    <p class="text-sm text-gray-500" id="deleteConfirmText">Apakah Anda yakin ingin menghapus data ini?</p>
+    <!-- MODAL KONFIRMASI HAPUS -->
+    <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+        <div class="relative bg-white rounded-lg shadow-xl max-w-sm w-full mx-4 p-6">
+            <div class="flex items-center justify-center mb-4">
+                <div class="bg-red-100 rounded-full p-3">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
                 </div>
             </div>
+            <h3 class="text-lg font-medium text-gray-900 text-center mb-2">Konfirmasi Hapus</h3>
+            <p class="text-sm text-gray-500 text-center mb-6" id="deleteConfirmText">Apakah Anda yakin?</p>
             <div class="mt-5 sm:mt-6 flex gap-3 justify-center">
                 <button type="button" id="btnCancelDelete" class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:text-sm transition-colors">Batal</button>
                 <button type="button" id="btnConfirmDelete" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:text-sm transition-colors">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL LOADING PROGRESS BAR UNTUK UPLOAD EXCEL -->
+    <div id="uploadModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <i class="fas fa-cloud-upload-alt text-blue-600 animate-bounce"></i>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Membaca & Menyimpan Data</h3>
+                            <div class="mt-4 w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                <div id="uploadProgressBar" class="bg-blue-600 h-3 rounded-full transition-all duration-200" style="width: 0%"></div>
+                            </div>
+                            <div class="mt-2 flex justify-between text-sm text-gray-500">
+                                <span id="uploadProgressDetail">Menyiapkan data...</span>
+                                <span id="uploadProgressText" class="font-bold text-blue-600">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -231,6 +262,8 @@
         // === DOM ELEMENTS ===
         const customerTableBody = document.getElementById('customerTableBody');
         const searchInput = document.getElementById('searchInput');
+        const filterMinInput = document.getElementById('filterMin');
+        const filterMaxInput = document.getElementById('filterMax');
         const statusMessage = document.getElementById('statusMessage');
         
         const templateFormContainer = document.getElementById('templateFormContainer');
@@ -246,6 +279,12 @@
         const btnCancelDelete = document.getElementById('btnCancelDelete');
         const btnConfirmDelete = document.getElementById('btnConfirmDelete');
         const deleteConfirmText = document.getElementById('deleteConfirmText');
+
+        // ELEMENT UNTUK PROGRESS BAR UPLOAD
+        const uploadModal = document.getElementById('uploadModal');
+        const uploadProgressBar = document.getElementById('uploadProgressBar');
+        const uploadProgressText = document.getElementById('uploadProgressText');
+        const uploadProgressDetail = document.getElementById('uploadProgressDetail');
 
         // === AUTH & REALTIME SYNC ===
         const initAuth = async () => {
@@ -284,7 +323,7 @@
                 } else {
                     renderTemplates();
                     updateTemplateDropdown();
-                    if(customers.length > 0) renderCustomers(searchInput.value);
+                    if(customers.length > 0) renderCustomers();
                 }
             }, (error) => console.error("Template Sync Error:", error));
 
@@ -299,7 +338,7 @@
                 // Sortir dari yang terbaru masuk
                 customers.sort((a, b) => b.createdAt - a.createdAt);
                 
-                renderCustomers(searchInput.value);
+                renderCustomers();
                 updateDashboard();
             }, (error) => {
                 console.error("Customer Sync Error:", error);
@@ -350,6 +389,10 @@
             const date = new Date(timestamp);
             return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
         }
+        
+        function formatRupiah(number) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+        }
 
         // === DASHBOARD FUNCTIONS ===
         function updateDashboard() {
@@ -375,9 +418,9 @@
 
             if(sortedStaff.length > 0) {
                 staffListHTML = sortedStaff.map(([name, stat]) => `
-                    <div class="flex justify-between items-center text-xs mb-1">
-                        <span class="font-medium text-gray-700 truncate w-24" title="${name}">${name}</span>
-                        <span class="text-green-600 font-bold px-1">${stat.contacted}/${stat.total} FU</span>
+                    <div class="flex justify-between items-center text-xs mb-1 border-b border-orange-50 pb-1 last:border-0">
+                        <span class="font-medium text-gray-700 truncate w-20" title="${name}">${name}</span>
+                        <span class="text-green-600 font-bold px-1 text-[10px]">${stat.contacted}/${stat.total} FU</span>
                         <span class="text-blue-600 font-medium">${currencyCompact.format(stat.value)}</span>
                     </div>
                 `).join('');
@@ -390,7 +433,7 @@
 
             if(elTotal) elTotal.innerText = totalPelanggan;
             if(elProgress) elProgress.innerHTML = `${contactedCount} <span class="text-sm text-gray-500 font-normal">/ ${totalPelanggan} (${progressPct}%)</span>`;
-            if(elValue) elValue.innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(totalValue);
+            if(elValue) elValue.innerText = formatRupiah(totalValue);
             if(elStaffList) elStaffList.innerHTML = staffListHTML || '<div class="text-xs text-gray-400 italic">Belum ada data</div>';
         }
 
@@ -441,7 +484,6 @@
             }
 
             const idToSave = editId || Date.now().toString();
-            // Simpan ke Cloud DB
             setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'templates', idToSave), {
                 name, content
             });
@@ -472,24 +514,33 @@
         }
 
         // === CUSTOMER MANAGEMENT ===
-        function renderCustomers(searchTerm = '') {
+        function renderCustomers() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const minVal = filterMinInput.value ? parseFloat(filterMinInput.value) : 0;
+            const maxVal = filterMaxInput.value ? parseFloat(filterMaxInput.value) : Infinity;
+
             let filteredCustomers = customers;
             
-            if (searchTerm) {
-                const term = searchTerm.toLowerCase();
-                filteredCustomers = customers.filter(c => 
-                    c.name.toLowerCase().includes(term) || 
-                    c.phone.includes(term)
-                );
+            // Terapkan filter Pencarian Text & Rentang Harga
+            if (searchTerm || filterMinInput.value || filterMaxInput.value) {
+                filteredCustomers = customers.filter(c => {
+                    const matchesSearch = c.name.toLowerCase().includes(searchTerm) || c.phone.includes(searchTerm);
+                    const val = c.transactionValue || 0;
+                    const matchesRange = val >= minVal && val <= maxVal;
+                    return matchesSearch && matchesRange;
+                });
             }
 
             if (filteredCustomers.length === 0) {
+                let msg = 'Belum ada pelanggan.';
+                if(customers.length > 0) msg = 'Tidak ada data yang cocok dengan pencarian/filter harga Anda.';
+                
                 customerTableBody.innerHTML = `
                     <tr>
                         <td colspan="5" class="px-6 py-10 text-center text-gray-500">
-                            <i class="fas ${searchTerm ? 'fa-search' : 'fa-inbox'} text-4xl mb-3 text-gray-300 block"></i>
-                            <p>${searchTerm ? 'Data tidak ditemukan.' : 'Belum ada pelanggan.'}</p>
-                            ${!searchTerm ? '<p class="text-sm mt-1">Silakan <b>Import Excel</b> untuk memulai Follow Up.</p>' : ''}
+                            <i class="fas ${searchTerm || filterMinInput.value ? 'fa-search' : 'fa-inbox'} text-4xl mb-3 text-gray-300 block"></i>
+                            <p>${msg}</p>
+                            ${customers.length === 0 ? '<p class="text-sm mt-1">Silakan <b>Import Excel</b> untuk memulai Follow Up.</p>' : ''}
                         </td>
                     </tr>
                 `;
@@ -508,6 +559,11 @@
                     if (t) templateName = t.name;
                 }
 
+                // Format tampilan nominal harga jika ada
+                const nominalHTML = c.transactionValue > 0 
+                    ? `<span class="inline-block mt-1 px-1.5 py-0.5 bg-blue-50 text-blue-700 text-[10px] rounded border border-blue-100 font-bold"><i class="fas fa-tag"></i> ${formatRupiah(c.transactionValue)}</span>` 
+                    : '';
+
                 return `
                 <tr class="hover:bg-gray-50 transition-colors ${isSelected ? 'bg-blue-50/50' : ''}">
                     <td class="px-4 py-3">
@@ -515,7 +571,7 @@
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap">
                         <div class="flex items-center">
-                            <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-whatsapp-light to-whatsapp rounded-full flex items-center justify-center text-white font-bold text-lg">
+                            <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-whatsapp-light to-whatsapp rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm">
                                 ${c.name.charAt(0).toUpperCase()}
                             </div>
                             <div class="ml-3">
@@ -528,11 +584,12 @@
                     </td>
                     <td class="px-4 py-3">
                         <div class="text-sm font-medium text-blue-700 line-clamp-1" title="${c.product || ''}"><i class="fas fa-box text-xs mr-1 opacity-70"></i>${c.product || 'Belum ada produk'}</div>
-                        <div class="text-sm text-gray-900 line-clamp-1 mt-1" title="${c.notes}">${c.notes || '-'}</div>
-                        <div class="text-xs text-gray-500 mt-1">User: <span class="font-medium text-gray-700">${c.staffName || '-'}</span> | Tpl: ${templateName}</div>
+                        <div class="text-xs text-gray-900 line-clamp-1 mt-1" title="${c.notes}">${c.notes || '-'}</div>
+                        ${nominalHTML}
+                        <div class="text-[10px] text-gray-500 mt-1">User: <span class="font-medium text-gray-700">${c.staffName || '-'}</span> | Tpl: ${templateName}</div>
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap text-center">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass} flex items-center justify-center gap-1 w-max mx-auto">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass} flex items-center justify-center gap-1 w-max mx-auto border ${c.status === 'contacted' ? 'border-green-200' : 'border-yellow-200'} shadow-sm">
                             <i class="fas ${statusIcon} text-[10px]"></i> ${statusText}
                         </span>
                         ${c.lastContacted ? `<div class="text-[10px] text-gray-400 mt-1" title="${formatDate(c.lastContacted)}">${new Date(c.lastContacted).toLocaleDateString()}</div>` : ''}
@@ -540,19 +597,19 @@
                     <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                         <div class="flex items-center justify-end gap-2">
                             <button onclick="sendWA('${c.id}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-whatsapp hover:bg-whatsapp-dark text-white rounded-md transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-whatsapp">
-                                <i class="fab fa-whatsapp"></i> Chat WA
+                                <i class="fab fa-whatsapp text-lg"></i> Chat
                             </button>
                             <div class="relative group">
-                                <button class="p-1.5 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors">
+                                <button class="p-1.5 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors border border-transparent hover:border-gray-200">
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
-                                <div class="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-100 hidden group-hover:block group-focus-within:block z-10">
+                                <div class="absolute right-0 mt-1 w-36 bg-white rounded-md shadow-lg border border-gray-100 hidden group-hover:block group-focus-within:block z-20">
                                     <div class="py-1">
                                         <button onclick="toggleStatus('${c.id}')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                             <i class="fas fa-sync-alt w-4 mr-1 text-blue-500"></i> Ubah Status
                                         </button>
                                         <button onclick="confirmDelete('${c.id}', 'customer')" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                            <i class="fas fa-trash-alt w-4 mr-1"></i> Hapus
+                                            <i class="fas fa-trash-alt w-4 mr-1"></i> Hapus Data
                                         </button>
                                     </div>
                                 </div>
@@ -649,9 +706,10 @@
         }
 
         function setupEventListeners() {
-            searchInput.addEventListener('input', (e) => {
-                renderCustomers(e.target.value);
-            });
+            // Event listener untuk Filter & Pencarian
+            searchInput.addEventListener('input', renderCustomers);
+            filterMinInput.addEventListener('input', renderCustomers);
+            filterMaxInput.addEventListener('input', renderCustomers);
 
             btnNewTemplate.addEventListener('click', () => {
                 resetTemplateForm();
@@ -689,16 +747,22 @@
             document.getElementById('selectAll')?.addEventListener('change', (e) => {
                 if (e.target.checked) {
                     const searchTerm = searchInput.value.toLowerCase();
-                    const filtered = customers.filter(c => 
-                        c.name.toLowerCase().includes(searchTerm) || 
-                        c.phone.includes(searchTerm)
-                    );
+                    const minVal = filterMinInput.value ? parseFloat(filterMinInput.value) : 0;
+                    const maxVal = filterMaxInput.value ? parseFloat(filterMaxInput.value) : Infinity;
+
+                    const filtered = customers.filter(c => {
+                        const matchesSearch = c.name.toLowerCase().includes(searchTerm) || c.phone.includes(searchTerm);
+                        const val = c.transactionValue || 0;
+                        const matchesRange = val >= minVal && val <= maxVal;
+                        return matchesSearch && matchesRange;
+                    });
+                    
                     filtered.forEach(c => selectedCustomers.add(c.id));
                 } else {
                     selectedCustomers.clear();
                 }
                 updateBulkActions();
-                renderCustomers(searchInput.value);
+                renderCustomers();
             });
         }
 
@@ -710,7 +774,7 @@
                 selectedCustomers.add(id);
             }
             updateBulkActions();
-            renderCustomers(searchInput.value);
+            renderCustomers();
         }
         window.toggleSelect = toggleSelect;
 
@@ -750,9 +814,9 @@
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = function(evt) {
+            
+            reader.onload = async function(evt) {
                 try {
-                    showNotification("Sedang memproses file Excel...", "info");
                     const data = new Uint8Array(evt.target.result);
                     const workbook = XLSX.read(data, {type: 'array'});
                     
@@ -765,7 +829,13 @@
                         return;
                     }
 
-                    let importedCount = 0;
+                    uploadModal.classList.remove('hidden');
+                    uploadProgressBar.style.width = '0%';
+                    uploadProgressText.innerText = '0%';
+                    uploadProgressDetail.innerText = 'Menyortir data pelanggan...';
+
+                    const validDataToUpload = [];
+
                     jsonData.forEach((row, index) => {
                         const name = row['NAMA PELANGGAN'] || row['Nama'] || row['Nama Pelanggan'] || row['Name'] || Object.values(row)[0]; 
                         let phone = row['NOMOR HP'] || row['No WA'] || row['Nomor WA'] || row['Phone'] || row['WhatsApp'] || row['No HP'] || row['Telp'];
@@ -786,7 +856,6 @@
 
                         if (name && phone) {
                             const cleanPhone = formatPhone(phone);
-                            // Bikin ID unik untuk database cloud
                             const newId = Date.now().toString() + index.toString() + Math.floor(Math.random()*1000).toString();
                             
                             const newCustomer = {
@@ -802,20 +871,43 @@
                                 transactionValue: transactionValue
                             };
                             
-                            // Tulis ke Firebase Cloud Storage
-                            setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', newId), newCustomer);
-                            importedCount++;
+                            validDataToUpload.push({ id: newId, payload: newCustomer });
                         }
                     });
 
-                    showNotification(`Berhasil mengimpor ${importedCount} pelanggan ke Cloud`);
+                    const totalData = validDataToUpload.length;
+
+                    if (totalData === 0) {
+                        uploadModal.classList.add('hidden');
+                        showNotification('Tidak ada data pelanggan valid ditemukan', 'error');
+                        return;
+                    }
+
+                    let processedCount = 0;
+                    for (const item of validDataToUpload) {
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', item.id), item.payload);
+                        processedCount++;
+                        
+                        const percentage = Math.round((processedCount / totalData) * 100);
+                        uploadProgressBar.style.width = percentage + '%';
+                        uploadProgressText.innerText = percentage + '%';
+                        uploadProgressDetail.innerText = `Menyimpan data ${processedCount} dari ${totalData}...`;
+                    }
+
+                    setTimeout(() => {
+                        uploadModal.classList.add('hidden');
+                        showNotification(`Selesai! Berhasil mengimpor ${totalData} pelanggan.`, 'success');
+                    }, 600);
+
                 } catch (err) {
                     console.error(err);
-                    showNotification('Terjadi kesalahan saat membaca file. Pastikan format benar.', 'error');
+                    uploadModal.classList.add('hidden');
+                    showNotification('Terjadi kesalahan saat membaca file', 'error');
                 } finally {
                     e.target.value = ''; 
                 }
             };
+            
             reader.readAsArrayBuffer(file);
         }
 
